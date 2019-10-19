@@ -40,6 +40,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private static final double CCA_THRESHOLD = 65.5;
     private List<Map<AccelerometerAxis, Double>> accelerometerValues = new ArrayList<>();
     private SensorManager sensorManager;
+    CountDownTimer countDownTimer;
 
     private TextView mTextView2;
     private TextView mTextView3;
@@ -67,6 +68,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 mTextView2.setVisibility(View.GONE);
                 mTextView3.setVisibility(View.GONE);
                 imageButton.setVisibility(View.GONE);
+                countDownTimer.cancel();
             }
         });
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
@@ -130,7 +132,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     }
 
     public void startCronometer(){
-        new CountDownTimer(15*1000, 1000) {
+        countDownTimer = new CountDownTimer(15*1000, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 mTextView3.setText("" + millisUntilFinished / 1000);
@@ -141,7 +143,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 requestTranscription("teste".getBytes());
             }
 
-        }.start();
+        };
+
+        countDownTimer.start();
     }
 
     private boolean isFallDetected(double x,

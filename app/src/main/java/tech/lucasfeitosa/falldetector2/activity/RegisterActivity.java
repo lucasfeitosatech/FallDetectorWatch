@@ -30,11 +30,13 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.gms.wearable.MessageClient;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.tbruyelle.rxpermissions.RxPermissions;
 
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ import tech.lucasfeitosa.falldetector2.R;
 import tech.lucasfeitosa.falldetector2.adapter.ContactAdpter;
 import tech.lucasfeitosa.falldetector2.model.Contact;
 import tech.lucasfeitosa.falldetector2.repository.ContactRepository;
+import tech.lucasfeitosa.falldetector2.service.SendNotificationPush;
 import tech.lucasfeitosa.falldetector2.util.SmsDeliveredReceiver;
 import tech.lucasfeitosa.falldetector2.util.SmsSentReceiver;
 
@@ -83,6 +86,19 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
             }
         });
 
+        FirebaseMessaging.getInstance().subscribeToTopic("falldetector")
+                .addOnCompleteListener(new OnCompleteListener<Void>() {
+                    @Override
+                    public void onComplete(@NonNull Task<Void> task) {
+                        String msg = "sucesso";
+                        if (!task.isSuccessful()) {
+                            msg = "erro";
+                        }
+                        Log.d("firebase", "onComplete: " + msg);
+                        Toast.makeText(RegisterActivity.this, msg, Toast.LENGTH_SHORT).show();
+                    }
+                });
+
         Wearable.getMessageClient(this).addListener(this);
 
         configRecyclerView();
@@ -103,9 +119,9 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
                 }, error -> {
                 });
-
-        sendSmsToAll();
-        callNumber();
+        String message = "Este e um chamado de alerta para os amigos de o(a) Lucas, que provavelmente sofreu uma queda.";
+        SendNotificationPush sendNotificationPush = new SendNotificationPush();
+        sendNotificationPush.sendNotification(message);
     }
 
     private void sendSmsToAll(){

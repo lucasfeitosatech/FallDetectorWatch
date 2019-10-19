@@ -49,4 +49,14 @@ dependencies {
     implementation 'com.google.firebase:firebase-core:17.2.0'
     wearApp project(path: ':falldetector2')
     implementation 'com.google.android.gms:play-services-wearable:17.0.0'
+    implementation 'com.google.firebase:firebase-messaging:20.0.0'
+
+    implementation 'com.android.volley:volley:1.1.1'
+    implementation 'com.facebook.stetho:stetho:1.5.1'
+    implementation 'com.facebook.stetho:stetho-okhttp3:1.5.1'
+    implementation 'com.facebook.stetho:stetho-okhttp:1.5.1'
+    implementation 'com.squareup.okhttp3:okhttp:4.2.1'
+
 }
+
+apply plugin: 'com.google.gms.google-services'

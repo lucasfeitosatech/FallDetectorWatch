@@ -13,6 +13,7 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
+import com.facebook.stetho.Stetho;
 import com.google.android.gms.location.LocationRequest;
 
 import java.util.concurrent.TimeUnit;
@@ -37,6 +38,7 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         instance = this;
+        Stetho.initializeWithDefaults(this);
         setSharedPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         Realm.init(this);
         locationUpdate();

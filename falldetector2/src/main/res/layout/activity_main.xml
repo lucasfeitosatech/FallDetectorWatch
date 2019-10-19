@@ -26,7 +26,7 @@
             android:textAlignment="center"
             android:textColor="@color/white"
             android:textStyle="bold"
-            android:visibility="gone"
+            android:visibility="visible"
             android:text="Queda Detectada!\n Cancelar Ajuda?" />
 
         <TextView
@@ -50,7 +50,7 @@
             android:scaleType="fitXY"
             android:layout_marginTop="10dp"
             android:src="@drawable/ic_ok"
-            android:visibility="gone"/>
+            android:visibility="visible"/>
 
         <TextView
             android:id="@+id/textView3"
@@ -61,7 +61,7 @@
             android:textColor="@color/white"
             android:textStyle="bold"
             android:text="00:15"
-            android:visibility="gone"/>
+            android:visibility="visible"/>
 
     </FrameLayout>
 </androidx.wear.widget.BoxInsetLayout>
