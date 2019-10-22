@@ -4,7 +4,7 @@ apply plugin: 'realm-android'
 android {
     compileSdkVersion 28
     defaultConfig {
-        applicationId "tech.lucasfeitosa.falldetector2"
+        applicationId "com.sandra.falldetector2"
         minSdkVersion 23
         targetSdkVersion 28
         versionCode 1
@@ -56,6 +56,8 @@ dependencies {
     implementation 'com.facebook.stetho:stetho-okhttp3:1.5.1'
     implementation 'com.facebook.stetho:stetho-okhttp:1.5.1'
     implementation 'com.squareup.okhttp3:okhttp:4.2.1'
+    implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
+    implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
 }
 
