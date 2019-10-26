@@ -46,19 +46,13 @@ dependencies {
     implementation 'pl.charmas.android:android-reactive-location:1.0@aar'
     api 'com.google.android.gms:play-services-location:17.0.0'
     //Dependencias do Firebase
-    implementation 'com.google.firebase:firebase-core:17.2.0'
+
     wearApp project(path: ':falldetector2')
     implementation 'com.google.android.gms:play-services-wearable:17.0.0'
-    implementation 'com.google.firebase:firebase-messaging:20.0.0'
 
-    implementation 'com.android.volley:volley:1.1.1'
-    implementation 'com.facebook.stetho:stetho:1.5.1'
-    implementation 'com.facebook.stetho:stetho-okhttp3:1.5.1'
-    implementation 'com.facebook.stetho:stetho-okhttp:1.5.1'
-    implementation 'com.squareup.okhttp3:okhttp:4.2.1'
     implementation 'org.eclipse.paho:org.eclipse.paho.client.mqttv3:1.1.0'
     implementation 'org.eclipse.paho:org.eclipse.paho.android.service:1.1.1'
 
 }
 
-apply plugin: 'com.google.gms.google-services'
+

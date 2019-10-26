@@ -22,6 +22,6 @@ public class ExampleInstrumentedTest {
         // Context of the app under test.
         Context appContext = InstrumentationRegistry.getTargetContext();
 
-        assertEquals("tech.lucasfeitosa.falldetector2", appContext.getPackageName());
+        assertEquals("com.sandra.falldetector2", appContext.getPackageName());
     }
 }

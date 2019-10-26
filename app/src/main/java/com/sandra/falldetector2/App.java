@@ -5,7 +5,6 @@ import android.app.Application;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.hardware.SensorManager;
 import android.location.Location;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -13,7 +12,6 @@ import android.util.Log;
 
 import androidx.core.app.ActivityCompat;
 
-import com.facebook.stetho.Stetho;
 import com.google.android.gms.location.LocationRequest;
 
 import java.util.concurrent.TimeUnit;
@@ -24,13 +22,11 @@ import rx.Observable;
 import rx.android.schedulers.AndroidSchedulers;
 import rx.functions.Func1;
 import com.sandra.falldetector2.repository.ContactRepository;
-import com.sandra.falldetector2.service.MailService;
 
 public class App extends Application {
     public static App instance;
     private SharedPreferences sharedPreferences;
     private ContactRepository contactRepository = new ContactRepository();
-    private SensorManager mSensorManager;
     private Handler handler;
     private Location location;
 
@@ -38,7 +34,6 @@ public class App extends Application {
     public void onCreate() {
         super.onCreate();
         instance = this;
-        Stetho.initializeWithDefaults(this);
         setSharedPreferences(PreferenceManager.getDefaultSharedPreferences(getApplicationContext()));
         Realm.init(this);
         locationUpdate();
@@ -62,27 +57,6 @@ public class App extends Application {
         this.sharedPreferences = sharedPreferences;
     }
 
-    public void sendEmail(){
-
-        new Thread(new Runnable() {
-            public void run() {
-                String locUrl = "";
-                if(getLocation() != null){
-                    locUrl = "https://www.google.com/maps/search/?api=1&query="+ getLocation().getLatitude() + "," + getLocation().getLongitude();
-                }
-
-                StringBuilder sb = new StringBuilder();
-                MailService mailer = new MailService("tech.lucasfeitosa.falldetector@gmail.com","lucasdf10@gmail.com","Possivel queda de Fulano","Este é um chamado de alerta para o Fulano que provavelmente sofreu uma queda." + locUrl);
-                try {
-                    mailer.sendMessage(sb);
-                    Log.d("teste", "onCreate: " + sb);
-                } catch (Exception e) {
-                    e.printStackTrace();
-                }
-
-            }
-        }).start();
-    }
 
     public void getLastLocation() {
 

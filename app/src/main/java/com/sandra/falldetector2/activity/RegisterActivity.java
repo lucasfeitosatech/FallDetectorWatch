@@ -34,7 +34,6 @@ import com.google.android.gms.wearable.MessageClient;
 import com.google.android.gms.wearable.MessageEvent;
 import com.google.android.gms.wearable.Wearable;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
-import com.google.firebase.messaging.FirebaseMessaging;
 import com.sandra.falldetector2.util.MqttManagerAndroid;
 import com.tbruyelle.rxpermissions.RxPermissions;
 
@@ -48,7 +47,6 @@ import com.sandra.falldetector2.R;
 import com.sandra.falldetector2.adapter.ContactAdpter;
 import com.sandra.falldetector2.model.Contact;
 import com.sandra.falldetector2.repository.ContactRepository;
-import com.sandra.falldetector2.service.SendNotificationPush;
 import com.sandra.falldetector2.util.SmsDeliveredReceiver;
 import com.sandra.falldetector2.util.SmsSentReceiver;
 
@@ -86,18 +84,6 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
             }
         });
 
-        FirebaseMessaging.getInstance().subscribeToTopic("falldetector")
-                .addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        String msg = "sucesso";
-                        if (!task.isSuccessful()) {
-                            msg = "erro";
-                        }
-                        Log.d("firebase", "onComplete: " + msg);
-                        Toast.makeText(RegisterActivity.this, msg, Toast.LENGTH_SHORT).show();
-                    }
-                });
 
         Wearable.getMessageClient(this).addListener(this);
 
@@ -119,9 +105,8 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
                 }, error -> {
                 });
-        String message = "Este e um chamado de alerta para os amigos de o(a) Lucas, que provavelmente sofreu uma queda.";
-        SendNotificationPush sendNotificationPush = new SendNotificationPush();
-        sendNotificationPush.sendNotification(message);
+
+
     }
 
     private void sendSmsToAll(){

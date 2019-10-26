@@ -7,6 +7,7 @@ import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.os.Handler;
+import android.os.Vibrator;
 import android.support.wearable.activity.WearableActivity;
 import android.util.Log;
 import android.view.View;
@@ -48,7 +49,6 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private TextView mTextView2;
     private TextView mTextView3;
     private ImageButton imageButton;
-    private Button button;
     private static final String
             FALL_CAPABILITY_NAME = "fall_notification";
     private String transcriptionNodeId = null;
@@ -144,7 +144,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         //stopReadings();
     }
     public void startCronometer(){
-        countDownTimer = new CountDownTimer(15*1000, 1000) {
+        countDownTimer = new CountDownTimer(5*1000, 1000) {
 
             public void onTick(long millisUntilFinished) {
                 mTextView3.setText("" + millisUntilFinished / 1000);
@@ -183,16 +183,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                     countOneQuarterset = true;
                     msg.append(System.currentTimeMillis());
                     Log.d("teste", "isFallDetected: Entrou aqui CCA >");
-                    if (isObserving){
-                    Handler handler = new Handler();
-                    Runnable run = new Runnable() {
-                        @Override
-                        public void run() {
 
-                        }
-                    };
-                    handler.postDelayed(run,400);
-                    }
+
 
                     return false;
                 }
@@ -251,14 +243,14 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 Log.d("teste", "run: Desvio Padrao " + getDesvPadrao());
                 if(getDesvPadrao() > 1.5 * 9.8){
                     Log.d("teste", "run: desvio padrao > ");
+                    Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
+                    long[] vibrationPattern = {0, 500, 50, 300};
+                    //-1 - don't repeat
+                    final int indexInPatternToRepeat = -1;
+                    vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
                     setupFallLayout();
                     this.accelerometerValues04seg = new ArrayList<>();
-//                                if (calculateSVM() < 200*9.8){
-//                                    Log.d("FDS-Fall-Happened", msg.toString());
-//                                }
-//                                else {
-//                                    initSensor();
-//                                }
+//
                 }else {
                     initSensor();
                 }

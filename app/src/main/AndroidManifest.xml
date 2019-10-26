@@ -20,14 +20,7 @@
         android:theme="@style/AppTheme">
 
         <service android:name="org.eclipse.paho.android.service.MqttService" />
-        <service
-            android:name="com.sandra.falldetector2.service.MyFirebaseMessagingService"
-            android:permission="com.google.android.c2dm.permission.SEND">
-            <intent-filter>
-                <action android:name="com.google.firebase.MESSAGING_EVENT" />
-                <action android:name="com.google.android.c2dm.intent.RECEIVE" />
-            </intent-filter>
-        </service>
+
 
         <activity
             android:name="com.sandra.falldetector2.activity.RegisterActivity"
