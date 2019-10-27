@@ -247,7 +247,9 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
             showToast("Mensagem Recebida: " + new String(messageEvent.getData()));
             sendSmsToAll();
             callNumber();
-            mqttManagerAndroid.publishMessage("teste","/teste");
+            String username = PreferenceManager.getDefaultSharedPreferences(this).getString("username", null);
+            String topic = "/" + username.replace(" ","-");
+            mqttManagerAndroid.publishMessage(username + " sofreu uma queda",topic);
         }
     }
 

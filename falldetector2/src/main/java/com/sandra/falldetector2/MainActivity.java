@@ -245,8 +245,10 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                     Log.d("teste", "run: desvio padrao > ");
                     Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                     long[] vibrationPattern = {0, 500, 50, 300};
+
                     //-1 - don't repeat
                     final int indexInPatternToRepeat = -1;
+
                     vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
                     setupFallLayout();
                     this.accelerometerValues04seg = new ArrayList<>();
