@@ -35,15 +35,27 @@ import java.util.Set;
 public class MainActivity extends WearableActivity implements SensorEventListener {
 
     private TextView mTextView;
+    //Intevalo entre as leituras do acelerometro que equivale a cada 0,02 seg e frequencia 50Hz
     private static final int ACCELEROMETER_SAMPLING_PERIOD = 20000;
+    //Limiar da soma das aceleraçoes
     private static final double CSV_THRESHOLD = 23;
+    //Limiar da variacao do angulo
     private static final double CAV_THRESHOLD = 18;
+    //Limiar da variacao do angulo
     private static final double CCA_THRESHOLD = 65.5;
+
+    //Armazenamento dos valores do acelerometro
     private List<Map<AccelerometerAxis, Double>> accelerometerValues = new ArrayList<>();
-    private List<Map<AccelerometerAxis, Double>> accelerometerValues2 = new ArrayList<>();
-    private List<Map<AccelerometerAxis, Double>> accelerometerValues3 = new ArrayList<>();
+
+    //Armazenanto dos valores para calcular o desvio padrao
+    private List<Map<AccelerometerAxis, Double>> accelerometerValuesDesvPadrao = new ArrayList<>();
+
+    //Armazenamento dos valores apos detectar a queda em 0.4 seg
     private List<Map<AccelerometerAxis, Double>> accelerometerValues04seg = new ArrayList<>();
+
+    //Variavel para controlar os dados lidos do sensor
     private SensorManager sensorManager;
+    //Variavel para controlar o cronometro
     CountDownTimer countDownTimer;
 
     private TextView mTextView2;
@@ -51,19 +63,27 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     private ImageButton imageButton;
     private static final String
             FALL_CAPABILITY_NAME = "fall_notification";
+
+    //Variavel para armazenar que ira se comunicar com o watch
     private String transcriptionNodeId = null;
-    boolean isObserving =true;
-    boolean countOneQuarterset = false;
+
+    //Variavel que controlar
+
+
+    boolean countOneQuarterseg = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        //Obtem a referencias das vies utilizadas no layout
         mTextView = findViewById(R.id.textView);
         mTextView2 = findViewById(R.id.textView2);
         mTextView3 = findViewById(R.id.textView3);
         imageButton = findViewById(R.id.imageButton);
+        //Metodo de click do botao para os casos de falso positivo.
+        //Ao clicar no botao as leituras vao sem retomadas assim como o cronometro
         imageButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -73,14 +93,15 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 mTextView2.setVisibility(View.GONE);
                 mTextView3.setVisibility(View.GONE);
                 imageButton.setVisibility(View.GONE);
-                isObserving = true;
                 countDownTimer.cancel();
                 countDownTimer = null;
             }
         });
+        //Iniciar a leitura dos dados do sensor
         sensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         initSensor();
 
+        //Codigo que inicia a atividade do relogio e indica que ele pronto para se comunicar e já busca o novo node
         Wearable.getCapabilityClient(this)
                 .getCapability(FALL_CAPABILITY_NAME, CapabilityClient.FILTER_REACHABLE)
                 .addOnCompleteListener(new OnCompleteListener<CapabilityInfo>() {
@@ -94,6 +115,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         setAmbientEnabled();
     }
 
+    //Metodo que inicia a leitura do sensor
     public void initSensor() {
 
         if( sensorManager.getSensorList(Sensor.TYPE_ACCELEROMETER).size() > 0) {
@@ -107,6 +129,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
     }
 
+    //Metodo que interrompe a leitura do sensor
     public void stopReadings(){
         sensorManager.unregisterListener(this);
         Log.d("teste", "stopReadings: ");
@@ -119,6 +142,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
     }
 
+    //Este metodo vai ser chamada a cada nova leitura nova do sensor
     @Override
     public void onSensorChanged(SensorEvent event) {
         // Axis of the rotation sample, not normalized yet.
@@ -127,36 +151,41 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         double z = event.values[2];
 
         if (this.isFallDetected(x, y, z)) {
-            //setupFallLayout();
+            //Apos detectar a queda obtem as leituras nos proximos 0.4 seg no tempo
+            countOneQuarterseg = true;
         }
 
     }
 
+
+    //Metodo responsavel por alterar o layout para indicar uma possivel queda
     public void setupFallLayout() {
-        Log.d("acc", "onSensorChanged: Fall Happen"  );
-        isObserving = false;
         startCronometer();
         mTextView.setText("Queda detectada!");
         mTextView.setVisibility(View.GONE);
         mTextView2.setVisibility(View.VISIBLE);
         mTextView3.setVisibility(View.VISIBLE);
         imageButton.setVisibility(View.VISIBLE);
-        //stopReadings();
     }
+
+    //Metodo que inicia o cronometro apos inicar a queda
     public void startCronometer(){
         countDownTimer = new CountDownTimer(5*1000, 1000) {
 
+            //Atualiza o textview para mostrar os segundos restantes
             public void onTick(long millisUntilFinished) {
                 mTextView3.setText("" + millisUntilFinished / 1000);
                 //here you can have your logic to set text to edittext
             }
 
+            //Ao finalizar o countDown envia a mensagem para o node de queda detectada
             public void onFinish() {
-                requestTranscription("teste".getBytes());
+                requestTranscription("Queda detectada".getBytes());
             }
 
         };
 
+        //Variavel que inicia o cronometro
         countDownTimer.start();
     }
 
@@ -164,7 +193,10 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                                    double y,
                                    double z) {
 
+        //Calcula aceleracao
         double acceleration = this.calculateSumVector(x, y, z);
+
+        //Armazena dados os dados da leitura nas variaveis
         this.addAccelerometerValuesToList(x, y, z, acceleration);
 
         StringBuilder msg = new StringBuilder("x: ").append(x)
@@ -173,87 +205,71 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 .append(" acc: ").append(acceleration);
        Log.d("FDS-Acc-Values", msg.toString());
 
+       //Veirifca se os dados lidos sao maiores que os limiares
         if (acceleration > CSV_THRESHOLD) {
-            //Log.d("teste", "isFallDetected: Entrou aqui CSV >");
+            //Verifica o limiar da variacao do angulo
             double angleVariation = this.calculateAngleVariation();
             if (angleVariation > CAV_THRESHOLD) {
-                //Log.d("teste", "isFallDetected: Entrou aqui CAV >");
+                //verifica o limiar da mudanca do angulo
                 double changeInAngle = this.calculateChangeInAngle();
                 if (changeInAngle > CCA_THRESHOLD) {
-                    countOneQuarterset = true;
                     msg.append(System.currentTimeMillis());
-                    Log.d("teste", "isFallDetected: Entrou aqui CCA >");
-
-
-
-                    return false;
+                    //Retorna que um possivel evento de queda ocorreu
+                    return true;
                 }
             }
         }
         return false;
     }
 
-    public Double getDesvPadrao(){
-        Double media = getMedia();
-        int tam = accelerometerValues2.size();
-        Double desvPadrao = 0D;
-        for (Map<AccelerometerAxis, Double> map:accelerometerValues2){
-            Double vlr = map.get(AccelerometerAxis.ACCELERATION);
-            Double aux = vlr - media;
-            desvPadrao += aux * aux;
-        }
-        return Math.sqrt(desvPadrao / (tam));
-    }
-
-    public Double getMedia(){
-
-        Double soma = 0.0;
-        for (Map<AccelerometerAxis, Double> map:accelerometerValues2){
-            soma += map.get(AccelerometerAxis.ACCELERATION);
-        }
-
-        return soma/accelerometerValues2.size();
-    }
 
     private void addAccelerometerValuesToList(double x,
                                               double y,
                                               double z,
+
                                               double acceleration) {
+        //Armazena os dados de 4 leituras consecutivas
         if(this.accelerometerValues.size() >= 4) {
             this.accelerometerValues.remove(0);
         }
-        if(this.accelerometerValues2.size() >= 40) {
-            this.accelerometerValues2.remove(0);
+        //Armazena os dados de 40 leituras consectuvias o que corresponde a 0.8 seg no tempo 40*50HZ = 0.8
+        if(this.accelerometerValuesDesvPadrao.size() >= 40) {
+            this.accelerometerValuesDesvPadrao.remove(0);
         }
-        if(this.accelerometerValues3.size() >= 150) {
-            this.accelerometerValues3.remove(0);
-        }
+       //Cria obeto com os dados da leitura
         Map<AccelerometerAxis, Double> map = new HashMap<>();
         map.put(AccelerometerAxis.X, x);
         map.put(AccelerometerAxis.Y, y);
         map.put(AccelerometerAxis.Z, z);
         map.put(AccelerometerAxis.ACCELERATION, acceleration);
-        this.accelerometerValues2.add(map);
+        //Adiciona os valores na variavel
+        this.accelerometerValuesDesvPadrao.add(map);
         this.accelerometerValues.add(map);
-        this.accelerometerValues3.add(map);
-        if (countOneQuarterset){
+        //Caso uma queda seja detectada obter leitura dos proximos 0.4seg no tempo o que corresponde a 20 amostrar 20*50HZ = 0.4
+
+        if (countOneQuarterseg){
             if (this.accelerometerValues04seg.size() >= 20){
-                countOneQuarterset = false;
+                //Para a leitura apos obter as 20 amostrar apos a queda
+                countOneQuarterseg = false;
+                //Interrompe as leituras
                 stopReadings();
-                Log.d("teste", "run: Desvio Padrao " + getDesvPadrao());
+                //Obtem o desvio padrao que é uma medida de dispersao em relacao a media. Este valor de 1.5*9.8 tem como base o trabalho do Victor Tavares
+                //Caso o desvio padrao seja maior que esse valor detectamos que a queda realmente foi detectada
                 if(getDesvPadrao() > 1.5 * 9.8){
-                    Log.d("teste", "run: desvio padrao > ");
+                    //Vibra o relogio indicando a queda
                     Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                     long[] vibrationPattern = {0, 500, 50, 300};
 
                     //-1 - don't repeat
                     final int indexInPatternToRepeat = -1;
-
                     vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
+                    //Muda o layout da tela para mostrar que ocorreu a queda
                     setupFallLayout();
+                    //Zera os valores do array
                     this.accelerometerValues04seg = new ArrayList<>();
 //
                 }else {
+                    //Caso a queda nao tenha sido confirmada, retoma com as leituras
                     initSensor();
                 }
 
@@ -263,84 +279,116 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         }
     }
 
+    //Metodo para calcular a aceleracao
     private double calculateSumVector(double x,
                                       double y,
                                       double z) {
         return Math.abs(x) + Math.abs(y) + Math.abs(z);
     }
 
-    private double calculateSVM(){
-        Double svm = 0D;
-        for (int i = 50;i<accelerometerValues3.size() - 1;i++){
 
-            Double vlr = accelerometerValues3.get(i).get(AccelerometerAxis.ACCELERATION);
-            svm += vlr;
-        }
-        Log.d("teste", "calculateSVM: Valor svm:  " + svm);
-        return svm;
-    }
-
+    //Metodo para calcular a variacao no angulo
     private double calculateAngleVariation() {
         int size = this.accelerometerValues.size();
         if (size < 2){
             return -1;
         }
 
+
+        //Obtem os dados de duas leituras consecutivas do acc
         Map<AccelerometerAxis, Double> minusTwo = this.accelerometerValues.get(size - 2);
         Map<AccelerometerAxis, Double> minusOne = this.accelerometerValues.get(size - 1);
 
+        //Calcula o valor da multiplicacao de dois vetores An*An1
         double anX = minusTwo.get(AccelerometerAxis.X) * minusOne.get(AccelerometerAxis.X);
         double anY = minusTwo.get(AccelerometerAxis.Y) * minusOne.get(AccelerometerAxis.Y);
         double anZ = minusTwo.get(AccelerometerAxis.Z) * minusOne.get(AccelerometerAxis.Z);
         double an = anX + anY + anZ;
 
+        //Calcula o valor do modulo do vetor ||An|| dado que ||.|| = forma euclidiana = raiz da soma dos quadrados de cada componente
         double anX0 = Math.pow(minusTwo.get(AccelerometerAxis.X), 2);
         double anY0 = Math.pow(minusTwo.get(AccelerometerAxis.Y), 2);
         double anZ0 = Math.pow(minusTwo.get(AccelerometerAxis.Z), 2);
         double an0 = Math.sqrt(anX0 + anY0 + anZ0);
 
+        //Calcula o valor do moudlo do vetor ||An1||
         double anX1 = Math.pow(minusOne.get(AccelerometerAxis.X), 2);
         double anY1 = Math.pow(minusOne.get(AccelerometerAxis.Y), 2);
         double anZ1 = Math.pow(minusOne.get(AccelerometerAxis.Z), 2);
         double an1 = Math.sqrt(anX1 + anY1 + anZ1);
 
+        //Calcula o valor de (An*An1)/(||An||*||An1||)
         double a = an / (an0 * an1);
 
+        //Calcula o cos inverso para obter o angulo e converte esse valor para radianos
         return Math.acos(a) * (180 / Math.PI);
     }
 
+    //Metodo para calcular a mudanca no angulo
     private double calculateChangeInAngle() {
         int size = this.accelerometerValues.size();
         if (size < 4){
             return -1;
         }
-        Map<AccelerometerAxis, Double> first = this.accelerometerValues.get(0);
-        Map<AccelerometerAxis, Double> third = this.accelerometerValues.get(3);
 
-        double aX = first.get(AccelerometerAxis.X) * third.get(AccelerometerAxis.X);
-        double aY = first.get(AccelerometerAxis.Y) * third.get(AccelerometerAxis.Y);
-        double aZ = first.get(AccelerometerAxis.Z) * third.get(AccelerometerAxis.Z);
+        Map<AccelerometerAxis, Double> first = this.accelerometerValues.get(0);
+        Map<AccelerometerAxis, Double> second = this.accelerometerValues.get(3);
+
+        //Ab * Ae
+        double aX = first.get(AccelerometerAxis.X) * second.get(AccelerometerAxis.X);
+        double aY = first.get(AccelerometerAxis.Y) * second.get(AccelerometerAxis.Y);
+        double aZ = first.get(AccelerometerAxis.Z) * second.get(AccelerometerAxis.Z);
 
         double a0 = aX + aY + aZ;
 
+        //Forma euclidiana
+        //||Ab||*||Ae|| dado que ||.|| = forma euclidiana = raiz da soma dos quadrados de cada componente
         aX = Math.pow(aX, 2);
         aY = Math.pow(aY, 2);
         aZ = Math.pow(aZ, 2);
         double a1 = (Math.sqrt(aX) + Math.sqrt(aY) + Math.sqrt(aZ));
 
+        //Calcula o cos inverso para obter o angulo e converte esse valor para radianos
         return Math.acos(a0 / a1) * (180 / Math.PI);
     }
 
-    private void updateTranscriptionCapability(CapabilityInfo capabilityInfo) {
-        Set<Node> connectedNodes = capabilityInfo.getNodes();
-
-        transcriptionNodeId = pickBestNodeId(connectedNodes);
-        //requestTranscription("fall".getBytes());
+    //Metodo para calcular o desvio padrao
+    public Double getDesvPadrao(){
+        Double media = getMedia();
+        int tam = accelerometerValuesDesvPadrao.size();
+        Double desvPadrao = 0D;
+        for (Map<AccelerometerAxis, Double> map:accelerometerValuesDesvPadrao){
+            Double vlr = map.get(AccelerometerAxis.ACCELERATION);
+            Double aux = vlr - media;
+            desvPadrao += aux * aux;
+        }
+        return Math.sqrt(desvPadrao / (tam));
     }
 
+    //Metodo para calcular a media
+    public Double getMedia(){
+
+        Double soma = 0.0;
+        for (Map<AccelerometerAxis, Double> map:accelerometerValuesDesvPadrao){
+            soma += map.get(AccelerometerAxis.ACCELERATION);
+        }
+
+        return soma/accelerometerValuesDesvPadrao.size();
+    }
+
+
+    private void updateTranscriptionCapability(CapabilityInfo capabilityInfo) {
+        //Obtem os nós conectados ao relogio
+        Set<Node> connectedNodes = capabilityInfo.getNodes();
+        //Escolhe um node dentro os listados para enviar a mensagem
+        transcriptionNodeId = pickBestNodeId(connectedNodes);
+
+    }
+
+    // Procura um node proximo ou escolhe um arbitrariamente
     private String pickBestNodeId(Set<Node> nodes) {
         String bestNodeId = null;
-        // Find a nearby node or pick one arbitrarily
+
         for (Node node : nodes) {
             Log.d("node", "pickBestNodeId: " + node.getDisplayName());
             bestNodeId = node.getId();
@@ -348,8 +396,10 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         return bestNodeId;
     }
 
+    //Método responsavel realizar a comunicação com o App
     private void requestTranscription(byte[] info) {
         if (transcriptionNodeId != null) {
+            //Enviar a informação através do comunicação bluetooth entre o watch e o node escolhido
             Task<Integer> sendTask =
                     Wearable.getMessageClient(this).sendMessage(
                             transcriptionNodeId, FALL_CAPABILITY_NAME, info);

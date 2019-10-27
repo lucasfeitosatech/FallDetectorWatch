@@ -58,13 +58,16 @@ public class App extends Application {
     }
 
 
+    //Método para obter a última localização conhecida do usuário
     public void getLastLocation() {
 
+        //Verifica se o App tem as permissões necessárias para obter a localização e em caso positivo sai do método
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
                 && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             return;
         }
         ReactiveLocationProvider locationProvider = new ReactiveLocationProvider(this);
+        //Méotod para obter a última localização conhecida do usuário
         locationProvider.getLastKnownLocation()
                 .subscribe(location1 -> {
                     if (location1 != null) {
@@ -95,6 +98,7 @@ public class App extends Application {
     }
 
 
+    //Método para recuperar a localização do usuário em background a cada 60 segundos
     public void locationUpdate(){
         handler = new Handler();
 

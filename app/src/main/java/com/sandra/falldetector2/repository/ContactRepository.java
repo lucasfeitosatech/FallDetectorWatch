@@ -37,6 +37,8 @@ public class ContactRepository {
         final RealmResults<Contact> contacts = realm.where(Contact.class).findAll();
         Object[] objects = Realm.getDefaultInstance().where(Contact.class).findAll().toArray();
         Contact[] contactsArr = Realm.getDefaultInstance().where(Contact.class).findAll().toArray(new Contact[objects.length]);
+
+        //Percorre todos os contatos cadastratos e os define como não sendo importante
         for (Contact c:contactsArr){
             if (!realm.isInTransaction())
             {
@@ -45,6 +47,7 @@ public class ContactRepository {
             c.setImportant(false);
             realm.commitTransaction();
         }
+        //Procura o contato que se deseja alterar e define ele como sendo importante
         Contact c = contacts.where().equalTo("number",contact.getNumber()).equalTo("name",contact.getName()).findFirst();
         if(c!=null){
             if (!realm.isInTransaction())

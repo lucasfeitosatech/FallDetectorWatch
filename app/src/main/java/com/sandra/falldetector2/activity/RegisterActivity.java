@@ -77,6 +77,8 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
         contactRepository = App.getInstance().getContactRepository();
         FloatingActionButton fab = findViewById(R.id.fab);
         mqttManagerAndroid = new MqttManagerAndroid(this);
+
+        //Evento de clique do FAB para cadastrar novo email de emergência.
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -84,12 +86,14 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
             }
         });
 
-
+        //Adicionar listener nessa acitivity para receber mensagens do watch
         Wearable.getMessageClient(this).addListener(this);
 
         configRecyclerView();
+
         setContactListAdpter();
 
+        //Ao iniciar a activity já as permissões de usuário em tempo de execucação
         new RxPermissions(this)
                 .request(Manifest.permission.ACCESS_COARSE_LOCATION,
                         Manifest.permission.ACCESS_FINE_LOCATION,
@@ -109,9 +113,11 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
     }
 
+    //Méto para enviar uma SMS para todos o usuários do banco de dados
     private void sendSmsToAll(){
 
         String username = PreferenceManager.getDefaultSharedPreferences(this).getString("username", null);
+        //Obtém a localização do usuário
         Location location = App.getInstance().getLocation();
         String message = "";
         if (location != null)
@@ -120,6 +126,7 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
             message = "Este é um chamado de alerta para os amigos de o(a)" + username + ", que provavelmente sofreu uma queda.";
         Contact[] contacts = contactRepository.getAllContacts();
         if (contacts.length > 0){
+            //Percorre todos os contatos e envia a SMS
             for (Contact c:contacts){
                 String number = c.getNumber().replace("(","").replace(")","").replace("-","").replace(" ","");
                 String phone = "+55" +number;
@@ -129,6 +136,7 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
         }
     }
 
+    //Método para enviar a SMS utilizando os recursos do SO Android
     private void sendSMS(String phoneNumber, String message) {
         ArrayList<PendingIntent> sentPendingIntents = new ArrayList<PendingIntent>();
         ArrayList<PendingIntent> deliveredPendingIntents = new ArrayList<PendingIntent>();
@@ -154,9 +162,11 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
     }
 
+    //Método para ligar para o contato selecionado
     public void callNumber(){
         Contact[] contacts = contactRepository.getAllContacts();
         for (Contact c: contacts){
+            //Apenas realiza a ligação para o contato que for selecionado como importante
             if (c.isImportant()){
                 String number = c.getNumber().replace("(","").replace(")","").replace("-","").replace(" ","");
                 Intent intent = new Intent(Intent.ACTION_CALL);
@@ -167,6 +177,7 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
     }
 
+    //Método para mostrar um alerta na tela
     void showToast(String text) {
 
         android.app.AlertDialog.Builder builder = new android.app.AlertDialog.Builder(this);
@@ -178,6 +189,7 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
     }
 
 
+    //Método para realizar a configuração inicial da RecyclerView
     public void configRecyclerView() {
 
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
@@ -185,6 +197,7 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
         contactList.addItemDecoration(new DividerItemDecoration(this, LinearLayout.VERTICAL));
     }
 
+    //Método para carregar o Adpter com os contatos
     public void setContactListAdpter(){
 
         Contact[] contacts = App.getInstance().getContactRepository().getAllContacts();
@@ -196,6 +209,8 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
     }
 
+
+    //Dialog para cadastrar um novo usuário no banco de dados local
     public void showNewEmailDialog(){
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
@@ -211,7 +226,8 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
             Button positiveButton = view.findViewById(R.id.ok_button);
             positiveButton.setOnClickListener(v -> {
-                //TODO Cadastrar email
+                //Após o dialogo aparecer na tela e o usuário clicar no botão de confirmar
+                //Salva o contato no banco de dados
                 saveContact(name.getText().toString(),mail.getText().toString());
                 dialogInterface.dismiss();
             });
@@ -223,28 +239,21 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
         alertDialog.show();
     }
 
+
+    //Método para salvar o contato no banco de dados
     public void saveContact(String name, String mail){
         Contact c = new Contact(name,mail,false);
         App.getInstance().getContactRepository().saveContact(c);
         setContactListAdpter();
     }
 
-    public void configActionBar(){
-
-        toolbar = findViewById(R.id.app_bar);
-        setSupportActionBar(toolbar);
-//        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-//        getSupportActionBar().setDisplayShowHomeEnabled(true);
-        toolbarTitle.setText("Fall Detector");
-        getSupportActionBar().setElevation(0);
-        leftButton.setVisibility(View.VISIBLE);
-    }
 
     @Override
     public void onMessageReceived(@NonNull MessageEvent messageEvent) {
 
+        //Verifica se a mensagem é do tipo fall_notification
         if (messageEvent.getPath().equals(FALL_CAPABILITY_NAME)) {
-            showToast("Mensagem Recebida: " + new String(messageEvent.getData()));
+            showToast("Queda detectada!: " );
             sendSmsToAll();
             callNumber();
             String username = PreferenceManager.getDefaultSharedPreferences(this).getString("username", null);
@@ -252,15 +261,6 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
             mqttManagerAndroid.publishMessage(username + " sofreu uma queda",topic);
         }
     }
-
-
-//    @Override
-//    public void onMessageReceived(MessageEvent messageEvent) {
-//
-//        if (messageEvent.getPath().equals(FALL_CAPABILITY_NAME)) {
-//            showToast("Mensagem Recebida");
-//        }
-//    }
 
 
 }
