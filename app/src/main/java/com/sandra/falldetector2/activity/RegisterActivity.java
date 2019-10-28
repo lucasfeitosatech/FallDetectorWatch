@@ -9,8 +9,12 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.Manifest;
+import android.app.Activity;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.net.Uri;
@@ -38,6 +42,7 @@ import com.sandra.falldetector2.util.MqttManagerAndroid;
 import com.tbruyelle.rxpermissions.RxPermissions;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -52,6 +57,10 @@ import com.sandra.falldetector2.util.SmsSentReceiver;
 
 public class RegisterActivity extends AppCompatActivity implements MessageClient.OnMessageReceivedListener {
 
+    public static final String SMS_DELIVERED = "SMS_DELIVERED";
+    public static final String SMS_SENT = "SMS_SENT";
+    private BroadcastReceiver sentStatusReceiver;
+    private BroadcastReceiver deliveredStatusReceiver;
 
     private static final String
             FALL_CAPABILITY_NAME = "fall_notification";
@@ -121,9 +130,9 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
         Location location = App.getInstance().getLocation();
         String message = "";
         if (location != null)
-            message = "Este é um chamado de alerta para os amigos de o(a)" + username + ", que provavelmente sofreu uma queda em: \n\n https://www.google.com/maps/search/?api=1&query="+ location.getLatitude()+","+location.getLongitude();
+            message = "Queda de" + username + "em: https://www.google.com/maps/search/?api=1&query="+ location.getLatitude()+","+location.getLongitude();
         else
-            message = "Este é um chamado de alerta para os amigos de o(a)" + username + ", que provavelmente sofreu uma queda.";
+            message = "Alerta de" + username + ", que provavelmente sofreu uma queda.";
         Contact[] contacts = contactRepository.getAllContacts();
         if (contacts.length > 0){
             //Percorre todos os contatos e envia a SMS
@@ -138,28 +147,64 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
 
     //Método para enviar a SMS utilizando os recursos do SO Android
     private void sendSMS(String phoneNumber, String message) {
-        ArrayList<PendingIntent> sentPendingIntents = new ArrayList<PendingIntent>();
-        ArrayList<PendingIntent> deliveredPendingIntents = new ArrayList<PendingIntent>();
-        PendingIntent sentPI = PendingIntent.getBroadcast(this, 0,
-                new Intent(this, SmsSentReceiver.class), 0);
-        PendingIntent deliveredPI = PendingIntent.getBroadcast(this, 0,
-                new Intent(this, SmsDeliveredReceiver.class), 0);
-        try {
-            SmsManager sms = SmsManager.getDefault();
-            ArrayList<String> mSMSMessage = sms.divideMessage(message);
-            for (int i = 0; i < mSMSMessage.size(); i++) {
-                sentPendingIntents.add(i, sentPI);
-                deliveredPendingIntents.add(i, deliveredPI);
-            }
-            sms.sendMultipartTextMessage(phoneNumber, null, mSMSMessage,
-                    sentPendingIntents, deliveredPendingIntents);
-
-        } catch (Exception e) {
-
-            e.printStackTrace();
-            Toast.makeText(getBaseContext(), "SMS sending failed...",Toast.LENGTH_SHORT).show();
+        SmsManager sms = SmsManager.getDefault();
+        // if message length is too long, messages are divided
+        List<String> messages = sms.divideMessage(message);
+        for (String msg : messages) {
+            PendingIntent sentIntent = PendingIntent.getBroadcast(
+                    this, 0, new Intent(SMS_SENT), 0);
+            PendingIntent deliveredIntent = PendingIntent.getBroadcast(
+                    this, 0, new Intent(SMS_DELIVERED), 0);
+            sms.sendTextMessage(phoneNumber, null, msg, sentIntent, deliveredIntent);
         }
+        this.registerBroadcastReceiverForSms();
 
+    }
+
+    public void registerBroadcastReceiverForSms() {
+        this.sentStatusReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+
+                switch (this.getResultCode()) {
+                    case Activity.RESULT_OK:
+
+                        break;
+                    case SmsManager.RESULT_ERROR_GENERIC_FAILURE:
+
+                        break;
+                    case SmsManager.RESULT_ERROR_NO_SERVICE:
+
+                        break;
+                    case SmsManager.RESULT_ERROR_NULL_PDU:
+
+                        break;
+                    case SmsManager.RESULT_ERROR_RADIO_OFF:
+
+                        break;
+                    default:
+                        break;
+                }
+
+                unregisterReceiver(this);
+            }
+        };
+        this.deliveredStatusReceiver = new BroadcastReceiver() {
+
+            @Override
+            public void onReceive(Context arg0, Intent arg1) {
+                switch (this.getResultCode()) {
+                    case Activity.RESULT_OK:
+
+                        break;
+                    case Activity.RESULT_CANCELED:
+                        break;
+                }
+            }
+        };
+        this.registerReceiver(this.sentStatusReceiver, new IntentFilter(SMS_SENT));
+        this.registerReceiver(this.deliveredStatusReceiver, new IntentFilter(SMS_DELIVERED));
     }
 
     //Método para ligar para o contato selecionado
