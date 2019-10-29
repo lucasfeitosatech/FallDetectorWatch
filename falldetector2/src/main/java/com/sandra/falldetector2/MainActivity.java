@@ -94,6 +94,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 mTextView3.setVisibility(View.GONE);
                 imageButton.setVisibility(View.GONE);
                 countDownTimer.cancel();
+                accelerometerValues = new ArrayList<>();
+                accelerometerValues04seg = new ArrayList<>();
+                accelerometerValuesDesvPadrao = new ArrayList<>();
                 countDownTimer = null;
             }
         });
