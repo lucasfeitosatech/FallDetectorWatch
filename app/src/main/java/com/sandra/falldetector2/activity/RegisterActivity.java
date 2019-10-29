@@ -137,10 +137,12 @@ public class RegisterActivity extends AppCompatActivity implements MessageClient
         if (contacts.length > 0){
             //Percorre todos os contatos e envia a SMS
             for (Contact c:contacts){
-                String number = c.getNumber().replace("(","").replace(")","").replace("-","").replace(" ","");
-                String phone = "+55" +number;
-                sendSMS(phone,message);
-                Log.d("teste", "sendSmsToAll: " + phone);
+                if (c.isImportant()) {
+                    String number = c.getNumber().replace("(", "").replace(")", "").replace("-", "").replace(" ", "");
+                    String phone = "+55" + number;
+                    sendSMS(phone, message);
+                    Log.d("teste", "sendSmsToAll: " + phone);
+                }
             }
         }
     }
