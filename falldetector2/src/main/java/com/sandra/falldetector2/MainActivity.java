@@ -293,15 +293,15 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     //Metodo para calcular a variacao no angulo
     private double calculateAngleVariation() {
         int size = this.accelerometerValues.size();
-        if (size < 2){
+        if (size < 150){
             return -1;
         }
 
         //1 seg equivale a leitura de 50 amostras consecutivas na frequencia de 50Hz
         int seg = 50;
         //Obtem os dados de duas leituras com um intervalo de diferenca de 1 seg do acc dado que 1 seg = 50*50Hz
-        Map<AccelerometerAxis, Double> minusTwo = this.accelerometerValues.get(size - 2*seg);
-        Map<AccelerometerAxis, Double> minusOne = this.accelerometerValues.get(size - 1*seg);
+        Map<AccelerometerAxis, Double> minusTwo = this.accelerometerValues.get(size - 1*seg);
+        Map<AccelerometerAxis, Double> minusOne = this.accelerometerValues.get(size - 1);
 
         //Calcula o valor da multiplicacao de dois vetores An*An1
         double anX = minusTwo.get(AccelerometerAxis.X) * minusOne.get(AccelerometerAxis.X);
@@ -331,7 +331,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     //Metodo para calcular a mudanca no angulo
     private double calculateChangeInAngle() {
         int size = this.accelerometerValues.size();
-        if (size < 4){
+        if (size < 200){
             return -1;
         }
         //Primeira corresponde a amostra inicial dentro dos 4seg de janela ||t = 0
