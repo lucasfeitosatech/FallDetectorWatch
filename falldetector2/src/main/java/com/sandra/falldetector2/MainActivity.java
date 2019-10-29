@@ -231,8 +231,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                                               double z,
 
                                               double acceleration) {
-        //Armazena os dados de 4 leituras consecutivas
-        if(this.accelerometerValues.size() >= 4) {
+        //Armazena os dados de 200 leituras consecutivas o que corresponde a 4seg no tempo 200*50HZ = 4
+        if(this.accelerometerValues.size() >= 200) {
             this.accelerometerValues.remove(0);
         }
         //Armazena os dados de 40 leituras consectuvias o que corresponde a 0.8 seg no tempo 40*50HZ = 0.8
@@ -297,10 +297,11 @@ public class MainActivity extends WearableActivity implements SensorEventListene
             return -1;
         }
 
-
-        //Obtem os dados de duas leituras consecutivas do acc
-        Map<AccelerometerAxis, Double> minusTwo = this.accelerometerValues.get(size - 2);
-        Map<AccelerometerAxis, Double> minusOne = this.accelerometerValues.get(size - 1);
+        //1 seg equivale a leitura de 50 amostras consecutivas na frequencia de 50Hz
+        int seg = 50;
+        //Obtem os dados de duas leituras com um intervalo de diferenca de 1 seg do acc dado que 1 seg = 50*50Hz
+        Map<AccelerometerAxis, Double> minusTwo = this.accelerometerValues.get(size - 2*seg);
+        Map<AccelerometerAxis, Double> minusOne = this.accelerometerValues.get(size - 1*seg);
 
         //Calcula o valor da multiplicacao de dois vetores An*An1
         double anX = minusTwo.get(AccelerometerAxis.X) * minusOne.get(AccelerometerAxis.X);
@@ -333,9 +334,10 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         if (size < 4){
             return -1;
         }
-
+        //Primeira corresponde a amostra inicial dentro dos 4seg de janela ||t = 0
         Map<AccelerometerAxis, Double> first = this.accelerometerValues.get(0);
-        Map<AccelerometerAxis, Double> second = this.accelerometerValues.get(3);
+        //Segunda amostra corresponde a amostra final dos 4seg de janela ||t = 4
+        Map<AccelerometerAxis, Double> second = this.accelerometerValues.get(size - 1);
 
         //Ab * Ae
         double aX = first.get(AccelerometerAxis.X) * second.get(AccelerometerAxis.X);
