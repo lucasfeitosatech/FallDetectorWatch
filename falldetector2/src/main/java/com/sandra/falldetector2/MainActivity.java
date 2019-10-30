@@ -268,8 +268,11 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                     vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
                     //Muda o layout da tela para mostrar que ocorreu a queda
                     setupFallLayout();
-                    //Zera os valores do array
+
+                    //Zera os valores dos arrays
                     this.accelerometerValues04seg = new ArrayList<>();
+                    this.accelerometerValues = new ArrayList<>();
+                    this.accelerometerValuesDesvPadrao = new ArrayList<>();
 //
                 }else {
                     //Caso a queda nao tenha sido confirmada, retoma com as leituras
