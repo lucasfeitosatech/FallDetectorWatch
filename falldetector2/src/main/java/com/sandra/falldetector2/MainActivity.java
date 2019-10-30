@@ -47,7 +47,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     //Armazenamento dos valores do acelerometro
     private List<Map<AccelerometerAxis, Double>> accelerometerValues = new ArrayList<>();
 
-    //Armazenanto dos valores para calcular o desvio padrao
+    //Armazenanto dos valores para calcular o desvio padrao no intervalo de 0.8 seg = 40*50HZ
     private List<Map<AccelerometerAxis, Double>> accelerometerValuesDesvPadrao = new ArrayList<>();
 
     //Armazenamento dos valores apos detectar a queda em 0.4 seg
@@ -70,7 +70,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     //Variavel que controlar
 
 
-    boolean countOneQuarterseg = false;
+    boolean countQuarterseg = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -155,7 +155,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
         if (this.isFallDetected(x, y, z)) {
             //Apos detectar a queda obtem as leituras nos proximos 0.4 seg no tempo
-            countOneQuarterseg = true;
+            countQuarterseg = true;
         }
 
     }
@@ -250,10 +250,10 @@ public class MainActivity extends WearableActivity implements SensorEventListene
         this.accelerometerValues.add(map);
         //Caso uma queda seja detectada obter leitura dos proximos 0.4seg no tempo o que corresponde a 20 amostrar 20*50HZ = 0.4
 
-        if (countOneQuarterseg){
+        if (countQuarterseg){
             if (this.accelerometerValues04seg.size() >= 20){
                 //Para a leitura apos obter as 20 amostrar apos a queda
-                countOneQuarterseg = false;
+                countQuarterseg = false;
                 //Interrompe as leituras
                 stopReadings();
                 //Obtem o desvio padrao que é uma medida de dispersao em relacao a media. Este valor de 1.5*9.8 tem como base o trabalho do Victor Tavares
