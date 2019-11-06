@@ -206,18 +206,19 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 .append(" y: ").append(y)
                 .append(" z: ").append(z)
                 .append(" acc: ").append(acceleration);
-       Log.d("FDS-Acc-Values", msg.toString());
+       Log.d("Acc-Values:", msg.toString());
 
        //Veirifca se os dados lidos sao maiores que os limiares
         if (acceleration > CSV_THRESHOLD) {
             //Verifica o limiar da variacao do angulo
+            Log.d("CSV_THRESHOLD", " CSV > 23 ");
             double angleVariation = this.calculateAngleVariation();
             if (angleVariation > CAV_THRESHOLD) {
-                //verifica o limiar da mudanca do angulo
+                Log.d("CAV_THRESHOLD", " CAV > 18 ");
                 double changeInAngle = this.calculateChangeInAngle();
                 if (changeInAngle > CCA_THRESHOLD) {
                     msg.append(System.currentTimeMillis());
-                    //Retorna que um possivel evento de queda ocorreu
+                    Log.d("CCA_THRESHOLD", " CCA > 65.5 ");
                     return true;
                 }
             }
@@ -260,6 +261,7 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                 //Caso o desvio padrao seja maior que esse valor detectamos que a queda realmente foi detectada
                 if(getDesvPadrao() > 1.5 * 9.8){
                     //Vibra o relogio indicando a queda
+                Log.d("DESV_PADRAO", " DESV_PADRAO > 1.5*G FALL DETECTED ");
                     Vibrator vibrator = (Vibrator) getSystemService(VIBRATOR_SERVICE);
                     long[] vibrationPattern = {0, 500, 50, 300};
 
