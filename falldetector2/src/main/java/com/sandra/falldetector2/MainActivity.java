@@ -53,6 +53,9 @@ public class MainActivity extends WearableActivity implements SensorEventListene
     //Armazenamento dos valores apos detectar a queda em 0.4 seg
     private List<Map<AccelerometerAxis, Double>> accelerometerValues04seg = new ArrayList<>();
 
+    //Armazenamento de 20 leituras apos a queda em 0.4 seg
+    private List<Map<AccelerometerAxis, Double>> accelerometer20afterFall= new ArrayList<>();
+
     //Variavel para controlar os dados lidos do sensor
     private SensorManager sensorManager;
     //Variavel para controlar o cronometro
@@ -71,6 +74,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
 
 
     boolean countQuarterseg = false;
+
+    boolean count20values = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -270,6 +275,8 @@ public class MainActivity extends WearableActivity implements SensorEventListene
                     vibrator.vibrate(vibrationPattern, indexInPatternToRepeat);
                     //Muda o layout da tela para mostrar que ocorreu a queda
                     setupFallLayout();
+                    count20values = true;
+                    initSensor();
 
                     //Zera os valores dos arrays
                     this.accelerometerValues04seg = new ArrayList<>();
@@ -284,6 +291,20 @@ public class MainActivity extends WearableActivity implements SensorEventListene
             }
             else
                 this.accelerometerValues04seg.add(map);
+        }
+
+        if (count20values){
+            StringBuilder msg = new StringBuilder("x: ").append(x)
+                    .append(" y: ").append(y)
+                    .append(" z: ").append(z)
+                    .append(" acc: ").append(acceleration);
+            Log.d("Acc-Values After Fall:", msg.toString());
+            if (this.accelerometer20afterFall.size() >= 20){
+                count20values = false;
+                stopReadings();
+            } else {
+                this.accelerometer20afterFall.add(map);
+            }
         }
     }
 
